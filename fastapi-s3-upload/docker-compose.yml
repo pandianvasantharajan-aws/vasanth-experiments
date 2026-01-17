@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  fastapi-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi-s3-upload
+    ports:
+      - "3000:3000"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - DEBUG=${DEBUG:-False}
+    env_file:
+      - .env
+    volumes:
+      # Development: mount source code for hot reload
+      - ./app:/app/app
+    restart: unless-stopped
+    networks:
+      - fastapi-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  fastapi-network:
+    driver: bridge

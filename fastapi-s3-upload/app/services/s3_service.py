@@ -1,7 +1,8 @@
 import boto3
 from botocore.exceptions import ClientError
 from app.config.settings import settings
-from typing import Tuple
+from typing import Tuple, List, Dict
+from datetime import datetime
 
 
 class S3Service:
@@ -77,6 +78,54 @@ class S3Service:
             raise ClientError(
                 error_response={"Error": {"Code": "DeleteError", "Message": str(e)}},
                 operation_name="DeleteObject"
+            )
+    
+    def list_files(self, prefix: str = "uploads/") -> List[Dict]:
+        """
+        List all files from S3 bucket with given prefix
+        
+        Args:
+            prefix: S3 prefix to list files (default: "uploads/")
+            
+        Returns:
+            List of file objects with metadata
+            
+        Raises:
+            ClientError: If S3 list operation fails
+        """
+        try:
+            response = self.s3_client.list_objects_v2(
+                Bucket=self.bucket_name,
+                Prefix=prefix
+            )
+            
+            files = []
+            if "Contents" in response:
+                for obj in response["Contents"]:
+                    # Skip the prefix itself if it appears as an object
+                    if obj["Key"] == prefix:
+                        continue
+                    
+                    file_name = obj["Key"].replace(prefix, "")
+                    s3_url = f"https://{self.bucket_name}.s3.{settings.aws_region}.amazonaws.com/{obj['Key']}"
+                    
+                    files.append({
+                        "file_key": obj["Key"],
+                        "file_name": file_name,
+                        "size": obj["Size"],
+                        "last_modified": obj["LastModified"].isoformat(),
+                        "url": s3_url
+                    })
+            
+            # Sort by last modified (newest first)
+            files.sort(key=lambda x: x["last_modified"], reverse=True)
+            return files
+            
+        except ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
+            raise ClientError(
+                error_response={"Error": {"Code": error_code, "Message": str(e)}},
+                operation_name="ListObjectsV2"
             )
 
 

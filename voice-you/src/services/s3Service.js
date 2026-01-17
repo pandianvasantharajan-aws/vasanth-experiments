@@ -43,3 +43,27 @@ export const checkApiHealth = async () => {
     throw new Error('API is not available');
   }
 };
+/**
+ * Get list of all voices from S3 bucket
+ * @returns {Promise<Array>} Array of voice objects with metadata
+ */
+export const listVoices = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/voices`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.detail || 'Failed to fetch voices');
+    } else if (error.request) {
+      throw new Error('No response from server. Make sure the FastAPI server is running.');
+    } else {
+      throw new Error(error.message || 'Failed to fetch voices');
+    }
+  }
+};
+
+export default {
+  uploadAudioToS3,
+  checkApiHealth,
+  listVoices,
+};

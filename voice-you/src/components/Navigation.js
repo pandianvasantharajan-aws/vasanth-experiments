@@ -20,6 +20,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import MicIcon from '@mui/icons-material/Mic';
 import HomeIcon from '@mui/icons-material/Home';
+import FolderIcon from '@mui/icons-material/Folder';
 
 function Navigation() {
   const theme = useTheme();
@@ -45,6 +46,7 @@ function Navigation() {
   const menuItems = [
     { label: 'Home', path: '/', icon: <HomeIcon /> },
     { label: 'Your Voice', path: '/your-voice', icon: <MicIcon /> },
+    { label: 'Voices', path: '/voices', icon: <FolderIcon /> },
   ];
 
   const desktopMenu = (
@@ -64,6 +66,14 @@ function Navigation() {
         sx={{ mx: 1 }}
       >
         Your Voice
+      </Button>
+      <Button
+        color="inherit"
+        component={RouterLink}
+        to="/voices"
+        sx={{ mx: 1 }}
+      >
+        Voices
       </Button>
     </>
   );

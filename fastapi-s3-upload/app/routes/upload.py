@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, status
 from botocore.exceptions import ClientError
 from app.models.schemas import FileUploadResponse, ErrorResponse
 from app.services.s3_service import s3_service
+from typing import List, Dict
 
 router = APIRouter(prefix="/api", tags=["uploads"])
 
@@ -59,6 +60,37 @@ async def upload_file(file: UploadFile = File(...)) -> FileUploadResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload file to S3: {error_code}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred: {str(e)}"
+        )
+
+@router.get(
+    "/voices",
+    response_model=List[Dict],
+    status_code=status.HTTP_200_OK,
+    responses={500: {"model": ErrorResponse}}
+)
+async def list_voices() -> List[Dict]:
+    """
+    List all uploaded voices from S3 bucket
+    
+    Returns:
+        List of voice files with metadata (file_name, size, last_modified, url)
+    """
+    
+    try:
+        # List files from S3 uploads folder
+        voices = s3_service.list_files(prefix="uploads/")
+        return voices
+        
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code", "Unknown")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve voices from S3: {error_code}"
         )
     except Exception as e:
         raise HTTPException(

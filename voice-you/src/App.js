@@ -4,6 +4,7 @@ import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import YourVoice from './pages/YourVoice';
+import Voices from './pages/Voices';
 
 const theme = createTheme({
   palette: {
@@ -27,6 +28,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/your-voice" element={<YourVoice />} />
+              <Route path="/voices" element={<Voices />} />
             </Routes>
           </Box>
         </Box>

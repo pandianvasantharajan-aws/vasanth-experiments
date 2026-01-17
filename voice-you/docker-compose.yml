@@ -1,0 +1,25 @@
+version: '3.9'
+
+services:
+  react-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voice-you
+    ports:
+      - "3001:3001"
+    environment:
+      - REACT_APP_API_URL=http://fastapi-s3-upload:3000
+    restart: unless-stopped
+    networks:
+      - voice-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  voice-network:
+    driver: bridge

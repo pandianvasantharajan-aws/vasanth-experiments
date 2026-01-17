@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  # FastAPI Backend for S3 uploads
+  fastapi-s3-upload:
+    build:
+      context: ./fastapi-s3-upload
+      dockerfile: Dockerfile
+    container_name: fastapi-s3-upload
+    ports:
+      - "3000:3000"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - DEBUG=${DEBUG:-False}
+    env_file:
+      - ./fastapi-s3-upload/.env
+    restart: unless-stopped
+    networks:
+      - voice-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # React Frontend
+  voice-you:
+    build:
+      context: ./voice-you
+      dockerfile: Dockerfile
+    container_name: voice-you
+    ports:
+      - "3001:3001"
+    environment:
+      - REACT_APP_API_URL=http://fastapi-s3-upload:3000
+    depends_on:
+      fastapi-s3-upload:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - voice-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  voice-network:
+    driver: bridge
